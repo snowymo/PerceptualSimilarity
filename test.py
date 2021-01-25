@@ -26,20 +26,22 @@ dist = loss_fn.forward(dummy_im0, dummy_im1)
 # replace with ours
 # read image and load them
 scenes=["bedroom", "gas", "lobby", "mc", "gallery"]
-# scenes=["gas"]
+scenes=["gas"]
 # scenes=["lobby"]
 
 imgCount = 20
-result = np.empty(shape=(21 * len(scenes) + 2, 2 + imgCount * 3))
+step = 1
+fovCount = int((110-5)/step)
+result = np.empty(shape=(fovCount * len(scenes) + 2, 2 + imgCount * 3))
 result[0, 0] = 0 #scene id
 result[0, 1] = 368 #fov
 # result[0, 2] = 687 #our
 # result[0, 3] = 6373 #nerf
 # result[0, 4] = 36832 #fovea
-result4curve = np.empty(shape = (imgCount*21*len(scenes), 6))
+result4curve = np.empty(shape = (imgCount*fovCount*len(scenes), 6))
 
 # f=open('lpips_result_fova_anova.csv','a')
-anova = np.empty(shape=(len(scenes)*imgCount+1, 2 + 3 * 21))
+anova = np.empty(shape=(len(scenes)*imgCount+1, 2 + 3 * fovCount))
 # anova[0,0] = "scene"
 # anova[0,1] = "imgid"
 # for i in range(5,110,5):
@@ -61,8 +63,7 @@ for sceneID, scene in enumerate(scenes):
         print('./imgs/gt_' + scene + '/view_' + f'{imgID:04d}' + '.png')
         # print(img_gtfova.shape)
         height, width = img_gt.shape[:2]
-        fovCount = 21
-        for fov in range(5,110,5):
+        for fov in range(5,110,step):
             rect_top = height / 2 - float(fov) / 110.0 * height / 2
             rect_top = int(rect_top)
             rect_btm = height / 2 + float(fov) / 110.0 * height / 2
@@ -102,24 +103,24 @@ for sceneID, scene in enumerate(scenes):
                 anova[sceneID * imgCount + imgID + 1, 2 + 3 * int(fov / 5 - 1)+1] = ex_d1
                 anova[sceneID * imgCount + imgID + 1, 2 + 3 * int(fov / 5 - 1)+2] = ex_d2
 
-                result4curve[sceneID * fovCount * imgCount + imgID * fovCount + int(fov / 5 - 1)] = [sceneID, fov, ex_d0, ex_d1, ex_d2, imgID]
+                result4curve[sceneID * fovCount * imgCount + imgID * fovCount + int(fov / step - 1)] = [sceneID, fov, ex_d0, ex_d1, ex_d2, imgID]
             else:
                 # print('fov %d Distances: OUR %.3f, FOVA %.3f' % (
                 #     fov, ex_d0.mean(), ex_d2.mean()))  # The mean distance is approximately the same as the non-spatial distance
                 print('fov %d Distances: OUR %.3f, NeRF %.3f, FOVA %.3f' % (
                     fov, ex_d0.mean(), ex_d1.mean(),
                     ex_d2.mean()))  # The mean distance is approximately the same as the non-spatial distance
-                result[sceneID * fovCount + int(fov / 5 - 1) + 1, 0] = sceneID  # scene id
-                result[sceneID * fovCount + int(fov / 5 - 1) + 1, 1] = fov
-                result[sceneID * fovCount + int(fov / 5 - 1) + 1, 0 * imgCount + 2 + imgID] = ex_d0.mean()
-                result[sceneID * fovCount + int(fov / 5 - 1) + 1, 1 * imgCount + 3 + imgID] = ex_d1.mean()
-                result[sceneID * fovCount + int(fov / 5 - 1) + 1, 2 * imgCount + 2+imgID] = ex_d2.mean()
+                result[sceneID * fovCount + int((fov-5) / step) + 1, 0] = sceneID  # scene id
+                result[sceneID * fovCount + int((fov-5) / step) + 1, 1] = fov
+                result[sceneID * fovCount + int((fov-5) / step) + 1, 0 * imgCount + 2 + imgID] = ex_d0.mean()
+                result[sceneID * fovCount + int((fov-5) / step) + 1, 1 * imgCount + 3 + imgID] = ex_d1.mean()
+                result[sceneID * fovCount + int((fov-5) / step) + 1, 2 * imgCount + 2+imgID] = ex_d2.mean()
 
-                anova[sceneID * imgCount + imgID + 1, 2 + 3 * int(fov / 5 - 1)] = ex_d0.mean()
-                anova[sceneID * imgCount + imgID + 1, 2 + 3 * int(fov / 5 - 1) + 1] = ex_d1.mean()
-                anova[sceneID * imgCount + imgID + 1, 2 + 3 * int(fov / 5 - 1)+2] = ex_d2.mean()
+                anova[sceneID * imgCount + imgID + 1, 2 + 3 * int((fov-5) / step)] = ex_d0.mean()
+                anova[sceneID * imgCount + imgID + 1, 2 + 3 * int((fov-5) / step) + 1] = ex_d1.mean()
+                anova[sceneID * imgCount + imgID + 1, 2 + 3 * int((fov-5) / step)+2] = ex_d2.mean()
 
-                result4curve[sceneID * fovCount * imgCount + imgID * fovCount + int(fov / 5 - 1)] = [sceneID, fov,
+                result4curve[sceneID * fovCount * imgCount + imgID * fovCount + int((fov-5) / step)] = [sceneID, fov,
                                                                                                      ex_d0.mean(), ex_d1.mean(),
                                                                                                      ex_d2.mean(), imgID]
 
@@ -129,9 +130,10 @@ for sceneID, scene in enumerate(scenes):
                 # pylab.imshow(ex_d0[0, 0, ...].data.cpu().numpy())
                 # pylab.show()
     # np.savetxt(f, anova[(sceneID) * 8+1:sceneID * 8+9], delimiter=',')
-# np.savetxt('lpips_fova_120.gallery.csv', result, delimiter=',')
-# np.savetxt('lpips_anova_120.gallery.csv', anova, delimiter=',')
-np.savetxt('lpips_curve_120.csv', result4curve, delimiter=',')
+    np.savetxt('lpips_curve_124_' + scene + '.csv', result4curve, delimiter=',')
+np.savetxt('lpips_fova_123.csv', result, delimiter=',')
+np.savetxt('lpips_anova_123.csv', anova, delimiter=',')
+
 
 # crop_img = img[y:y+h, x:x+w]
 # ex_ref = lpips.im2tensor(lpips.load_image('./imgs/ex_ref.png'))
