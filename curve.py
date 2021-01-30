@@ -12,20 +12,21 @@ x = np.arange(len(a[0]))
 
 all_data=[]
 
-input_f = open("lpips_curve_123.csv", "r")
+input_f = open("lpips_curve_125_bedroom.csv", "r")
 for line in input_f:
     if not line.startswith("scene"):
         s = line.strip().split(',')
-        all_data.append(np.array(s[0:5]))
+        all_data.append(np.array(s[0:6]))
 
 all_data = np.array(all_data)
 
 handles = []
 labels=[]
 
-step = 1
+step = 5
 NUM_ECC = int((105-5)/step+1)
 scenes=["bedroom", "gas", "lobby", "mc", "gallery"]
+scenes=["bedroom"]
 for scene in range(len(scenes)): # scene
     if scene == 2:
         continue

@@ -2,7 +2,7 @@ import cv2
 
 
 scenes = ["bedroom", "gallery", "gas", "mc"]
-scene = "bedroom"
+# scene = "bedroom"
 imgID=12
 fovs=[20,60,100]
 
@@ -16,7 +16,9 @@ for scene in scenes:
         rect_left = int(width / 2 - float(fov) / 110.0 * width / 2)
         rect_right = int(width / 2 + float(fov) / 110.0 * width / 2)
 
-        img_our = cv2.imread('./imgs/eval_'+scene+'/view' + f'{imgID:04d}' + '.png')
+        path = './imgs/eval_mono/ref_as_left_eye/'+scene+'/view' + f'{imgID:04d}' + '_blended.png'
+        print(path)
+        img_our = cv2.imread('./imgs/eval_mono/ref_as_left_eye/'+scene+'/view' + f'{imgID:04d}' + '_blended.png')
         crop_img_our = img_our[rect_top:rect_btm, rect_left:rect_right]
 
         cv2.imwrite(scene+str(imgID)+"fov"+str(fov)+".png", crop_img_our)
