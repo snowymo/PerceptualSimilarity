@@ -1,0 +1,1 @@
+ffmpeg.exe -f image2 -i "C:\Projects\PerceptualSimilarity\hint\NeRF\gas_demohint_120001\%3d.png" -filter:v fps=fps=0.1 test.avi
